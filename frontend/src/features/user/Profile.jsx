@@ -6,6 +6,9 @@ import {
   FaImage,
   FaLock,
   FaUserCircle,
+  FaHistory,
+  FaVideoSlash,
+  FaHeart,
 } from "react-icons/fa";
 
 const Profile = () => {
@@ -66,6 +69,7 @@ const Profile = () => {
       ) : (
         <div>No user data available</div>
       )}
+
       <div className="mt-8">
         <h3 className="text-2xl font-bold mb-4">
           Update Your Profile
@@ -89,6 +93,31 @@ const Profile = () => {
           to="/change-password"
           className="flex items-center text-white bg-gradient-to-r from-gray-700 via-gray-900 to-black py-2 px-4 rounded-lg mb-4 hover:bg-gradient-to-l transition duration-300">
           <FaLock className="mr-2" /> Change Password
+        </Link>
+        <Link
+          to="/user-playlist"
+          className="flex items-center text-white bg-gradient-to-r from-gray-700 via-gray-900 to-black py-2 px-4 rounded-lg mb-4 hover:bg-gradient-to-l transition duration-300">
+          <FaLock className="mr-2" /> Playlist
+        </Link>
+        <Link
+          to="/unpublished-videos"
+          className="flex items-center text-white bg-gradient-to-r from-gray-700 via-gray-900 to-black py-2 px-4 rounded-lg mb-4 hover:bg-gradient-to-l transition duration-300">
+          <FaVideoSlash className="mr-2" /> Unpublished Videos
+        </Link>
+        <Link
+          to="/liked-videos"
+          className="flex items-center text-white bg-gradient-to-r from-gray-700 via-gray-900 to-black py-2 px-4 rounded-lg mb-4 hover:bg-gradient-to-l transition duration-300">
+          <FaHeart className="mr-2" /> Liked Videos
+        </Link>
+        <Link
+          to="/liked-tweets"
+          className="flex items-center text-white bg-gradient-to-r from-gray-700 via-gray-900 to-black py-2 px-4 rounded-lg mb-4 hover:bg-gradient-to-l transition duration-300">
+          <FaHeart className="mr-2" /> Liked Tweets
+        </Link>
+        <Link
+          to="/history"
+          className="flex items-center text-white bg-gradient-to-r from-gray-700 via-gray-900 to-black py-2 px-4 rounded-lg mb-4 hover:bg-gradient-to-l transition duration-300">
+          <FaHistory className="mr-2" /> Watch History
         </Link>
       </div>
     </div>

@@ -19,16 +19,19 @@ export const getChannelStats = asyncHandler(async (req, res) => {
   }
 
   // Get the subscriber count
-  const subscriberCount = await Subscriptions.find({
+  const subscriptions = await Subscriptions.find({
     subscriber: userId,
   }).select("channel");
+  const subscriberCount = subscriptions.length;
+
+  // Get the channel IDs
+  const channelIds = subscriptions.map((sub) => sub.channel);
 
   // Get the video count and total video views for the subscriber's channels
-  const channelIds = subscriberCount.map((sub) => sub.channel);
-  const videoCount = await Videos.find({
-    channel: { $in: channelIds },
-  }).count();
+  const videoCount = await Videos.countDocuments({ owner: userId });
+
   const totalVideoViews = await Videos.aggregate([
+    { $match: { owner: { $in: channelIds } } },
     {
       $group: {
         _id: null,
@@ -37,13 +40,34 @@ export const getChannelStats = asyncHandler(async (req, res) => {
     },
   ]);
 
+  const videoLikeCount = await Likes.countDocuments({
+    video: { $exists: true },
+  });
+
+  // Get total likes on comments
+  const commentLikeCount = await Likes.countDocuments({
+    comment: { $exists: true },
+  });
+
+  // Get total likes on tweets
+  const tweetLikeCount = await Likes.countDocuments({
+    tweet: { $exists: true },
+  });
+
+  // Calculate the total likes
+  const totalLikes = {
+    videoLikes: videoLikeCount,
+    commentLikes: commentLikeCount,
+    tweetLikes: tweetLikeCount,
+  };
+
   // Calculate the stats
   const stats = {
     videoCount,
     totalVideoViews: totalVideoViews.length
       ? totalVideoViews[0].totalViews
       : 0,
-    likeCount: await Likes.find({ user: userId }).count(),
+    totalLikes,
     subscriberCount,
   };
 
@@ -56,22 +80,26 @@ export const getChannelStats = asyncHandler(async (req, res) => {
  */
 export const getChannelVideos = asyncHandler(async (req, res) => {
   const { _id: userId } = req.user;
+  console.log(userId);
 
   // Check if the user is authenticated
   if (!userId) {
     throw new ApiError(401, "Unauthorized");
   }
 
-  // Get the subscriber count
-  const subscriberCount = await Subscriptions.find({
+  // Get the channels the user is subscribed to
+  const subscriptions = await Subscriptions.find({
     subscriber: userId,
   }).select("channel");
 
-  // Get the video count and total video views for the subscriber's channels
-  const channelIds = subscriberCount.map((sub) => sub.channel);
+  // Extract channel IDs from subscriptions
+  const channelIds = subscriptions.map((sub) => sub.channel);
+
+  // Get the videos from the subscribed channels
   const videos = await Videos.find({
-    channel: { $in: channelIds },
-  }).populate("channel");
+    owner: { $in: channelIds },
+    isPublished: true,
+  }).populate("owner");
 
   // Return the videos
   return res.status(200).json(new ApiResponse(200, videos));

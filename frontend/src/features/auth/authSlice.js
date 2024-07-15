@@ -2,21 +2,36 @@ import { createSlice } from "@reduxjs/toolkit";
 import { Cookies } from "react-cookie";
 
 const cookies = new Cookies();
-const refresh = cookies.get("refreshToken", { path: "/" });
-console.log(refresh);
+
+const initialState = {
+  accessToken: cookies.get("accessToken") || null,
+  refreshToken: cookies.get("refreshToken") || null,
+};
 const authSlice = createSlice({
   name: "auth",
-  initialState: {
-    accessToken: cookies.get("accessToken", { path: "/" }) || null,
-  },
+  initialState,
   reducers: {
     setCredentials: (state, action) => {
-      state.accessToken = action.payload.accessToken;
+      const { accessToken, refreshToken } = action.payload;
+      state.accessToken = accessToken;
+      state.refreshToken = refreshToken;
+      cookies.set("accessToken", accessToken, {
+        path: "/",
+        httpOnly: true,
+        sameSite: "Strict",
+      });
+      cookies.set("refreshToken", refreshToken, {
+        path: "/",
+        httpOnly: true,
+        sameSite: "Strict",
+      });
+      console.log(accessToken, refreshToken);
     },
     logout: (state) => {
       state.accessToken = null;
-      cookies.remove("accessToken", { path: "/" });
-      cookies.remove("refreshToken", { path: "/" });
+      state.refreshToken = null;
+      cookies.remove("accessToken");
+      cookies.remove("refreshToken");
     },
   },
 });

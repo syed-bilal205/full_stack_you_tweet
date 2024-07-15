@@ -1,14 +1,12 @@
 /* eslint-disable react/no-unescaped-entities */
 import { useLoginMutation } from "./authApiSlice";
-import { setCredentials } from "./authSlice";
-import { useDispatch } from "react-redux";
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Loader } from "../../components";
 import { AiOutlineUser, AiOutlineLock } from "react-icons/ai";
 
 const Login = () => {
-  const dispatch = useDispatch();
   const [loginFormData, setLoginFormData] = useState({
     identifier: "",
     password: "",
@@ -28,13 +26,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const result = await login(loginFormData).unwrap();
-      console.log(result.data.loggedInUser);
-      dispatch(
-        setCredentials({
-          accessToken: result.data.accessToken,
-        })
-      );
+      await login(loginFormData).unwrap();
       setLoginFormData({ identifier: "", password: "" });
       navigate("/");
     } catch (error) {

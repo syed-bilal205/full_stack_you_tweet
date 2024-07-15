@@ -1,6 +1,6 @@
 import { ApiError } from "../utils/index.js";
 
-export const errorHandler = async (err, req, res, next) => {
+export const errorHandler = (err, req, res, next) => {
   if (err instanceof ApiError) {
     return res.status(err.statusCode).json({
       success: err.success,
@@ -9,10 +9,12 @@ export const errorHandler = async (err, req, res, next) => {
       data: err.data,
     });
   } else {
+    console.error("Internal Server Error:", err);
     return res.status(500).json({
       success: false,
-      message: err.message,
-      error: "Internal Server error",
+      message: err.message || "Internal Server Error",
+      error: err.errors || [],
+      data: null,
     });
   }
 };

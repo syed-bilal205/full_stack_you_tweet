@@ -13,7 +13,9 @@ const generateAccessAndRefreshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
     const accessToken = await user.generateAccessToken();
+    // console.log("access " + accessToken);
     const refreshToken = await user.generateRefreshToken();
+    // console.log("refresh " + refreshToken);
 
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
@@ -48,7 +50,7 @@ export const register = asyncHandler(async (req, res) => {
 
   const avatarLocalPath = req.files?.avatar[0]?.path;
 
-  // console.log("Avatar Local Path:", avatarLocalPath);
+  // console.log("Avatar Local Path Register:", avatarLocalPath);
 
   let coverImageLocalPath;
   if (
@@ -187,11 +189,11 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
           throw new ApiError(403, "Forbidden");
         }
         const foundUser = await User.findById(decoded._id).exec();
-        if (!foundUser) {
-          throw new ApiError(401, "Unauthorized");
-        }
-        if (incomingRefreshToken !== foundUser?.refreshToken) {
-          throw new ApiError(401, "Refresh token is expired or used");
+        if (
+          !foundUser ||
+          incomingRefreshToken !== foundUser.refreshToken
+        ) {
+          throw new ApiError(401, "Invalid refresh token");
         }
 
         const { accessToken, refreshToken: newRefreshToken } =
@@ -342,17 +344,16 @@ export const updateUserAccountDetails = asyncHandler(
 );
 
 export const updateUserAvatar = asyncHandler(async (req, res) => {
-  console.log("Uploaded file:", req.file);
+  // console.log("Uploaded file:", req.file);
 
-  console.log("files" + req.files);
   const avatarLocalPath = req.file?.path;
-  console.log(avatarLocalPath);
+  // console.log("Avatar local path:", avatarLocalPath);
 
   if (!avatarLocalPath) {
     throw new ApiError(400, "Please provide an avatar");
   }
 
-  const publicId = req.user?.avatar.split("/").pop().split(".")[0];
+  const publicId = req.user?.avatar?.split("/").pop().split(".")[0];
 
   await deleteFromCloudinary(publicId);
 
@@ -475,12 +476,12 @@ export const getUserChannelProfile = asyncHandler(
       },
     ]);
 
-    if (channel?.length) {
+    if (!channel?.length) {
       throw new ApiError(404, "channel does not exist");
     }
     return res
       .status(200)
-      .json(new ApiResponse(200, "success", channel));
+      .json(new ApiResponse(200, "success", channel[0]));
   }
 );
 
@@ -526,6 +527,13 @@ export const getWatchHistory = asyncHandler(async (req, res) => {
       },
     },
   ]);
+
+  if (!userWatchHistory || userWatchHistory.length === 0) {
+    return res
+      .status(404)
+      .json(new ApiResponse(404, "Watch history not found"));
+  }
+
   return res
     .status(200)
     .json(

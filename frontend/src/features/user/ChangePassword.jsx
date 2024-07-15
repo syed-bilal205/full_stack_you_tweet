@@ -1,6 +1,7 @@
-import { Loader } from "../../components";
 import { useChangePasswordMutation } from "./userApiSlice";
 import { useState } from "react";
+import { AiOutlineLock } from "react-icons/ai";
+import { Loader } from "../../components";
 
 const ChangePassword = () => {
   const [changePassword, { isLoading, isSuccess, isError, error }] =
@@ -40,7 +41,10 @@ const ChangePassword = () => {
       ) : (
         <form onSubmit={handleChangePassword} className="space-y-4">
           <div>
-            <label className="block mb-1">Current Password</label>
+            <label className=" mb-1 flex items-center">
+              <AiOutlineLock className="mr-2" />
+              Current Password
+            </label>
             <input
               type="password"
               name="oldPassword"
@@ -51,7 +55,10 @@ const ChangePassword = () => {
             />
           </div>
           <div>
-            <label className="block mb-1">New Password</label>
+            <label className=" mb-1 flex items-center">
+              <AiOutlineLock className="mr-2" />
+              New Password
+            </label>
             <input
               type="password"
               name="newPassword"

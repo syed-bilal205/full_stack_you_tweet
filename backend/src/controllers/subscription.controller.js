@@ -28,7 +28,7 @@ export const toggleSubscription = asyncHandler(async (req, res) => {
     await Subscription.findByIdAndDelete(subscription._id);
     return res
       .status(200)
-      .json(new ApiResponse(200, "Unsubscribed successfully"));
+      .json(new ApiResponse(200, "Unsubscribed successfully", false));
   }
 
   // Subscribe to the channel if user is not already subscribed
@@ -40,7 +40,12 @@ export const toggleSubscription = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(
-      new ApiResponse(200, "Subscribed successfully", newSubscription)
+      new ApiResponse(
+        200,
+        "Subscribed successfully",
+        newSubscription,
+        true
+      )
     );
 });
 
@@ -96,16 +101,14 @@ export const getUserChannelSubscribers = asyncHandler(
       },
     ]);
 
-    const subscribersCount =
+    const result =
       subscribersAggregate.length > 0
         ? subscribersAggregate[0]
-        : null;
+        : { count: 0, subscribers: [] };
 
     return res
       .status(200)
-      .json(
-        new ApiResponse(200, "Subscribers fetched", subscribersCount)
-      );
+      .json(new ApiResponse(200, "Subscribers fetched", result));
   }
 );
 
@@ -122,18 +125,25 @@ export const getSubscribedChannels = asyncHandler(
     }
 
     // Fetch channels subscribed by the user
-    const subscribedChannels = await Subscription.aggregate([
+    const subscribedChannelsAggregate = await Subscription.aggregate([
       {
         $match: {
           subscriber: new mongoose.Types.ObjectId(subscriberId),
         },
       },
       {
+        $group: {
+          _id: null,
+          count: { $sum: 1 },
+          channels: { $push: "$channel" },
+        },
+      },
+      {
         $lookup: {
           from: "users",
-          localField: "channel",
+          localField: "channels",
           foreignField: "_id",
-          as: "channel",
+          as: "channels",
           pipeline: [
             {
               $project: {
@@ -145,16 +155,24 @@ export const getSubscribedChannels = asyncHandler(
           ],
         },
       },
+      {
+        $project: {
+          _id: 0,
+          count: 1,
+          channels: 1,
+        },
+      },
     ]);
+
+    const result =
+      subscribedChannelsAggregate.length > 0
+        ? subscribedChannelsAggregate[0]
+        : { count: 0, channels: [] };
 
     return res
       .status(200)
       .json(
-        new ApiResponse(
-          200,
-          "Subscribed channels fetched",
-          subscribedChannels
-        )
+        new ApiResponse(200, "Subscribed channels fetched", result)
       );
   }
 );

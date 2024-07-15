@@ -13,6 +13,6 @@ const AuthProtector = ({ children }) => {
     }
   }, [navigate, accessToken]);
 
-  return children;
+  return accessToken ? children : null;
 };
 export default AuthProtector;

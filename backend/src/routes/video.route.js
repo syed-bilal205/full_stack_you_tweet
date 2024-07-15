@@ -6,6 +6,7 @@ import {
   updateVideo,
   togglePublishStatus,
   getAllTheVideos,
+  unisPublishedVideos,
 } from "../controllers/video.controller.js";
 import { verifyJwt, upload } from "../middleware/index.js";
 
@@ -18,6 +19,13 @@ const router = express.Router();
  * Get all the videos
  */
 router.route("/").get(getAllTheVideos);
+
+/*
+
+*/
+router
+  .route("/unpublished-videos")
+  .get(verifyJwt, unisPublishedVideos);
 
 /**
  * Toggle publish status of a video

@@ -4,7 +4,6 @@ import {
   createPlaylist,
   deletePlayList,
   getUserPlaylists,
-  getPlaylistById,
   removeVideoFromPlaylist,
   updatePlaylist,
   addVideoToPlaylist,
@@ -17,7 +16,6 @@ router.use(verifyJwt);
 router.route("/").post(createPlaylist).get(getUserPlaylists);
 router
   .route("/:playlistId")
-  .get(getPlaylistById)
   .delete(deletePlayList)
   .patch(updatePlaylist);
 

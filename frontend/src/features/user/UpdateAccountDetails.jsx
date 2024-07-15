@@ -1,6 +1,7 @@
 import { useUpdateUserAccountDetailsMutation } from "./userApiSlice";
 import { Loader } from "../../components";
 import { useState } from "react";
+import { AiOutlineUser, AiOutlineMail } from "react-icons/ai";
 
 const UpdateAccountDetails = () => {
   const [updateAccountDetails, setUpdateAccountDetails] = useState({
@@ -45,7 +46,10 @@ const UpdateAccountDetails = () => {
           onSubmit={handleUpdateDetailsSubmit}
           className="space-y-4">
           <div>
-            <label className="block mb-1">Username</label>
+            <label className=" mb-1 flex items-center">
+              <AiOutlineUser className="mr-2" />
+              Username
+            </label>
             <input
               type="text"
               name="username"
@@ -55,7 +59,10 @@ const UpdateAccountDetails = () => {
             />
           </div>
           <div>
-            <label className="block mb-1">Full Name</label>
+            <label className=" mb-1 flex items-center">
+              <AiOutlineUser className="mr-2" />
+              Full Name
+            </label>
             <input
               type="text"
               name="fullName"
@@ -65,7 +72,10 @@ const UpdateAccountDetails = () => {
             />
           </div>
           <div>
-            <label className="block mb-1">Email</label>
+            <label className=" mb-1 flex items-center">
+              <AiOutlineMail className="mr-2" />
+              Email
+            </label>
             <input
               type="email"
               name="email"

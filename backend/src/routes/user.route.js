@@ -66,7 +66,7 @@ router
  */
 router
   .route("/update-avatar")
-  .put(verifyJwt, upload.single("avatar"), updateUserAvatar);
+  .patch(verifyJwt, upload.single("avatar"), updateUserAvatar);
 
 /**
  * Update cover image of a user

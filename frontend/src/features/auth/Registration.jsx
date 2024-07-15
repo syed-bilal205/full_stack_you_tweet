@@ -44,7 +44,7 @@ const Registration = () => {
       const result = await register(formData).unwrap();
       setRegistrationResult(result);
       console.log(result);
-      formData({
+      setFormData({
         username: "",
         fullName: "",
         email: "",

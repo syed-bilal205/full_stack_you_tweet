@@ -147,10 +147,6 @@ export const toggleTweetLike = asyncHandler(async (req, res) => {
  * Get all the liked videos
  */
 export const getAllTheLikedVideos = asyncHandler(async (req, res) => {
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 10;
-  const skip = (page - 1) * limit;
-
   const videos = await Like.aggregate([
     {
       $match: {
@@ -176,6 +172,7 @@ export const getAllTheLikedVideos = asyncHandler(async (req, res) => {
                     username: 1,
                     email: 1,
                     fullName: 1,
+                    avatar: 1,
                   },
                 },
               ],
@@ -190,14 +187,7 @@ export const getAllTheLikedVideos = asyncHandler(async (req, res) => {
     {
       $unwind: "$videoDetails",
     },
-    {
-      $lookup: {
-        from: "tweets",
-        localField: "videoDetails._id",
-        foreignField: "video",
-        as: "tweets",
-      },
-    },
+
     {
       $project: {
         video: {
@@ -213,7 +203,6 @@ export const getAllTheLikedVideos = asyncHandler(async (req, res) => {
           updatedAt: "$videoDetails.updatedAt",
           owner: "$videoDetails.ownerDetails",
         },
-        tweets: 1,
       },
     },
     {
@@ -221,15 +210,74 @@ export const getAllTheLikedVideos = asyncHandler(async (req, res) => {
         "video.createdAt": -1,
       },
     },
-    {
-      $skip: skip,
-    },
-    {
-      $limit: limit,
-    },
   ]);
 
   return res
     .status(200)
     .json(new ApiResponse(200, "Success", videos));
+});
+
+/**
+ * Get all the liked tweets
+ */
+export const getAllLikedTweets = asyncHandler(async (req, res) => {
+  const tweets = await Like.aggregate([
+    {
+      $match: {
+        likedBy: new mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "tweets", // Assuming the collection name for tweets
+        localField: "tweet", // Field in Like collection that references tweets
+        foreignField: "_id", // Field in tweets collection to match
+        as: "tweetDetails", // Alias for the joined tweets data
+        pipeline: [
+          {
+            $lookup: {
+              from: "users", // Assuming the collection name for users
+              localField: "owner", // Field in tweets collection that references users
+              foreignField: "_id", // Field in users collection to match
+              as: "ownerDetails", // Alias for the joined users data
+              pipeline: [
+                {
+                  $project: {
+                    username: 1,
+                    email: 1,
+                    fullName: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $unwind: "$ownerDetails",
+          },
+        ],
+      },
+    },
+    {
+      $unwind: "$tweetDetails",
+    },
+    {
+      $project: {
+        tweet: {
+          _id: "$tweetDetails._id",
+          text: "$tweetDetails.text",
+          createdAt: "$tweetDetails.createdAt",
+          updatedAt: "$tweetDetails.updatedAt",
+          owner: "$tweetDetails.ownerDetails",
+        },
+      },
+    },
+    {
+      $sort: {
+        "tweet.createdAt": -1,
+      },
+    },
+  ]);
+
+  return res.status(200).json(tweets);
 });

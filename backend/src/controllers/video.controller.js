@@ -48,7 +48,7 @@ export const getAllTheVideos = asyncHandler(async (req, res) => {
     page: pageNumber,
     limit: limitNumber,
     sort: sort,
-    populate: { path: "owner", select: "username" },
+    populate: { path: "owner", select: "username avatar" },
   };
 
   const result = await Video.paginate(searchQuery, options);
@@ -67,7 +67,7 @@ export const getAllTheVideos = asyncHandler(async (req, res) => {
  * Publish a video
  */
 export const publishAVideo = asyncHandler(async (req, res) => {
-  const { title, description } = req.body;
+  const { title, description, isPublished } = req.body;
 
   if (!title || !description) {
     throw new ApiError(400, "All fields are required");
@@ -96,10 +96,10 @@ export const publishAVideo = asyncHandler(async (req, res) => {
     title,
     description,
     duration: videoFileUpload.duration,
-    isPublished: true,
     thumbnail: thumbnail.url,
     videoFile: videoFileUpload.url,
     owner: req.user?._id,
+    isPublished: isPublished !== undefined ? isPublished : true,
   });
 
   if (!video) {
@@ -123,7 +123,10 @@ export const getSingleVideo = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid video id");
   }
 
-  const video = await Video.findById(videoId);
+  const video = await Video.findById(videoId).populate("owner", [
+    "username",
+    "avatar",
+  ]);
 
   if (!video) {
     throw new ApiError(404, "Video not found");
@@ -162,14 +165,17 @@ export const updateVideo = asyncHandler(async (req, res) => {
     );
   }
 
-  const thumbnailLocalFilePath = req.file?.path;
+  const thumbnailLocalFilePath = req.files?.thumbnail?.[0];
+  // console.log(thumbnailLocalFilePath);
 
   if (thumbnailLocalFilePath) {
     const publicId = video.thumbnail.split("/").pop().split(".")[0];
+    // console.log(publicId);
     await deleteFromCloudinary(publicId);
     const thumbnail = await uploadOnCloudinary(
-      thumbnailLocalFilePath
+      thumbnailLocalFilePath.path
     );
+    // console.log(thumbnail);
 
     if (!thumbnail.url) {
       throw new ApiError(400, "Error while uploading on cloudinary");
@@ -253,5 +259,24 @@ export const togglePublishStatus = asyncHandler(async (req, res) => {
     .status(200)
     .json(
       new ApiResponse(200, "Video status updated successfully", video)
+    );
+});
+
+export const unisPublishedVideos = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  const videos = await Video.find({
+    owner: userId,
+    isPublished: false,
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        "Unpublished videos retrieved successfully",
+        videos
+      )
     );
 });

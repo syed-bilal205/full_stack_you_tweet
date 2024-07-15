@@ -11,28 +11,24 @@ import { isValidObjectId } from "mongoose";
  */
 export const getVideoComment = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  const { page = 1, limit = 10 } = req.query;
 
   if (!isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid video id");
   }
 
-  const options = {
-    page: parseInt(page, 10),
-    limit: parseInt(limit, 10),
-    sort: { createdAt: -1 },
-    populate: {
+  const comments = await Comment.find({ video: videoId })
+    .sort({ createdAt: -1 })
+    .populate({
       path: "video",
-    },
-  };
+      select: "title videoFile",
+    })
+    .populate({
+      path: "owner",
+      select: "username avatar",
+    });
 
-  const comments = await Comment.paginate(
-    { video: videoId },
-    options
-  );
-
-  if (!comments) {
-    throw new ApiError(404, "Comments not found");
+  if (!comments || comments.length === 0) {
+    throw new ApiError(404, "Not Comments");
   }
 
   return res

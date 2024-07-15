@@ -31,14 +31,14 @@ import PlaylistRoute from "./routes/playlist.route.js";
 import dashboardRoute from "./routes/dashboard.route.js";
 
 // routes define
-app.use("/api/user", userRoute);
-app.use("/api/subscription", subscriptionRoute);
-app.use("/api/video", videoRoute);
-app.use("/api/tweet", tweetRoute);
-app.use("/api/comment", commentRoute);
-app.use("/api/like", likeRoute);
-app.use("/api/playlist", PlaylistRoute);
-app.use("/api/dashboard", dashboardRoute);
+app.use("/api/user", userRoute); //done
+app.use("/api/subscription", subscriptionRoute); //done
+app.use("/api/video", videoRoute); //done
+app.use("/api/tweet", tweetRoute); //done
+app.use("/api/comment", commentRoute); //done
+app.use("/api/like", likeRoute); //done
+app.use("/api/playlist", PlaylistRoute); //done
+app.use("/api/dashboard", dashboardRoute); //done
 
 app.get("*", (req, res) => {
   res.send("The page you are looking for does not exist");

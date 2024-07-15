@@ -1,4 +1,9 @@
+import { AllVideos } from "../index";
 const Home = () => {
-  return <div>Home</div>;
+  return (
+    <div>
+      <AllVideos />
+    </div>
+  );
 };
 export default Home;
