@@ -1,4 +1,5 @@
 import Video from "../models/video.model.js";
+import User from "../models/user.model.js";
 import {
   asyncHandler,
   ApiResponse,
@@ -123,13 +124,25 @@ export const getSingleVideo = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid video id");
   }
 
-  const video = await Video.findById(videoId).populate("owner", [
-    "username",
-    "avatar",
-  ]);
+  const video = await Video.findByIdAndUpdate(
+    videoId,
+    {
+      $inc: { views: 1 },
+    },
+    { new: true }
+  ).populate("owner", ["username", "avatar"]);
 
   if (!video) {
     throw new ApiError(404, "Video not found");
+  }
+
+  const userId = req.user?._id;
+  if (userId) {
+    const user = await User.findById(userId);
+    if (!user.watchHistory.includes(videoId)) {
+      user.watchHistory.push(videoId);
+      await user.save();
+    }
   }
 
   return res

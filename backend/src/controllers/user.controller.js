@@ -126,7 +126,6 @@ export const login = asyncHandler(async (req, res) => {
     .exec();
 
   const cookieOptions = {
-    httpOnly: true,
     sameSite: "strict",
     path: "/",
   };
@@ -137,7 +136,10 @@ export const login = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .cookie("refreshToken", refreshToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, {
+      ...cookieOptions,
+      httpOnly: true,
+    })
     .cookie("accessToken", accessToken, cookieOptions)
     .json(
       new ApiResponse(200, "User Login Successfully", {
@@ -158,7 +160,6 @@ export const logout = asyncHandler(async (req, res) => {
   );
 
   const cookieOptions = {
-    httpOnly: true,
     sameSite: "strict",
     path: "/",
   };
@@ -181,45 +182,35 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 
   try {
-    jwt.verify(
+    const decoded = jwt.verify(
       incomingRefreshToken,
-      process.env.REFRESH_TOKEN_SECRET,
-      async (err, decoded) => {
-        if (err) {
-          throw new ApiError(403, "Forbidden");
-        }
-        const foundUser = await User.findById(decoded._id).exec();
-        if (
-          !foundUser ||
-          incomingRefreshToken !== foundUser.refreshToken
-        ) {
-          throw new ApiError(401, "Invalid refresh token");
-        }
-
-        const { accessToken, refreshToken: newRefreshToken } =
-          await generateAccessAndRefreshTokens(foundUser._id);
-
-        const cookieOptions = {
-          httpOnly: true,
-          sameSite: "strict",
-          path: "/",
-        };
-
-        if (process.env.NODE_ENV === "production") {
-          cookieOptions.secure = true;
-        }
-        return res
-          .status(200)
-          .cookie("accessToken", accessToken, cookieOptions)
-          .cookie("refreshToken", newRefreshToken, cookieOptions)
-          .json(
-            new ApiResponse(200, "Access token refreshed", {
-              accessToken,
-              refreshToken: newRefreshToken,
-            })
-          );
-      }
+      process.env.REFRESH_TOKEN_SECRET
     );
+    const foundUser = await User.findById(decoded._id).exec();
+    if (
+      !foundUser ||
+      incomingRefreshToken !== foundUser.refreshToken
+    ) {
+      throw new ApiError(401, "Invalid refresh token");
+    }
+    const { accessToken, refreshToken: newRefreshToken } =
+      await generateAccessAndRefreshTokens(foundUser._id);
+
+    const cookieOptions = {
+      sameSite: "strict",
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+    };
+    res
+      .status(200)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", newRefreshToken, cookieOptions)
+      .json(
+        new ApiResponse(200, "Access token refreshed", {
+          accessToken,
+          refreshToken: newRefreshToken,
+        })
+      );
   } catch (error) {
     const statusCode =
       error instanceof jwt.JsonWebTokenError ? 403 : 500;
@@ -489,7 +480,7 @@ export const getWatchHistory = asyncHandler(async (req, res) => {
   const userWatchHistory = await User.aggregate([
     {
       $match: {
-        _id: new mongoose.Types.ObjectId(req.user?._id),
+        _id: new mongoose.Types.ObjectId(req.user?._id.toString()),
       },
     },
     {
@@ -511,6 +502,7 @@ export const getWatchHistory = asyncHandler(async (req, res) => {
                     username: 1,
                     email: 1,
                     fullName: 1,
+                    avatar: 1,
                   },
                 },
               ],
@@ -521,14 +513,16 @@ export const getWatchHistory = asyncHandler(async (req, res) => {
     },
     {
       $addFields: {
-        owner: {
-          $first: "$owner",
-        },
+        owner: { $arrayElemAt: ["$watchHistory.owner", 0] },
       },
     },
   ]);
 
-  if (!userWatchHistory || userWatchHistory.length === 0) {
+  if (
+    !userWatchHistory ||
+    userWatchHistory.length === 0 ||
+    !userWatchHistory[0].watchHistory
+  ) {
     return res
       .status(404)
       .json(new ApiResponse(404, "Watch history not found"));

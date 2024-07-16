@@ -102,5 +102,7 @@ export const getChannelVideos = asyncHandler(async (req, res) => {
   }).populate("owner");
 
   // Return the videos
-  return res.status(200).json(new ApiResponse(200, videos));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "All channel video fetched", videos));
 });

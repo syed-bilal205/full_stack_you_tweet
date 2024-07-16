@@ -11,7 +11,7 @@ import { Cookies } from "react-cookie";
 const cookies = new Cookies();
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "http://localhost:8000/api",
+  baseUrl: import.meta.env.VITE_API_URL,
   credentials: "include",
   prepareHeaders: (headers, { getState }) => {
     const token = getState().auth.accessToken;
@@ -26,16 +26,11 @@ const baseQueryWithReAuth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
 
   if (result.error && result.error.status === 403) {
-    // console.log(
-    //   "Access token expired, attempting to refresh token..."
-    // );
     const refreshResult = await baseQuery(
-      { url: "/user/refresh-token", method: "POST" },
+      { url: import.meta.env.VITE_REFRESH_TOKEN, method: "POST" },
       api,
       extraOptions
     );
-
-    // console.log("Refresh token response:", refreshResult);
 
     if (refreshResult.error) {
       console.error("Error refreshing token:", refreshResult.error);
@@ -46,20 +41,13 @@ const baseQueryWithReAuth = async (args, api, extraOptions) => {
     if (refreshResult.data && refreshResult.data.data) {
       try {
         const { accessToken, refreshToken } = refreshResult.data.data;
-        // console.log(
-        //   "New access Token:",
-        //   accessToken,
-        //   "New refresh Token:",
-        //   refreshToken
-        // );
+
         cookies.set("accessToken", accessToken, {
           path: "/",
-          httpOnly: true,
           sameSite: "Strict",
         });
         cookies.set("refreshToken", refreshToken, {
           path: "/",
-          httpOnly: true,
           sameSite: "Strict",
         });
         api.dispatch(setCredentials({ accessToken }));

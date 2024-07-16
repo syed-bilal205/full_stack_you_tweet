@@ -5,6 +5,7 @@ import {
   logout,
   selectCurrentToken,
 } from "../features/auth/authSlice";
+import Logo from "../../public/icons.gif";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,8 +24,15 @@ const Navbar = () => {
         <div className="relative flex items-center justify-between h-16">
           <div className="flex-1 flex items-center justify-start">
             <div className="flex-shrink-0">
-              <Link to="/" className="text-3xl font-bold text-white">
-                You_TweeT
+              <Link
+                to="/"
+                className="flex items-center text-3xl font-bold text-white">
+                <img
+                  src={Logo}
+                  alt="Logo"
+                  className="h-8 w-auto mr-2"
+                />
+                <span className="text-3xl font-bold">You_TweeT</span>
               </Link>
             </div>
           </div>

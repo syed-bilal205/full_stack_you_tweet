@@ -7,12 +7,14 @@ export const dashboardApiSlice = api.injectEndpoints({
         url: "/dashboard/channel-stats",
         method: "GET",
       }),
+      invalidatesTags: ["dashboard"],
     }),
     getChannelVideos: builder.query({
       query: () => ({
         url: "/dashboard/channel-videos",
         method: "GET",
       }),
+      invalidatesTags: ["dashboard"],
     }),
   }),
 });

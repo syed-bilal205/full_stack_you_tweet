@@ -17,15 +17,12 @@ const authSlice = createSlice({
       state.refreshToken = refreshToken;
       cookies.set("accessToken", accessToken, {
         path: "/",
-        httpOnly: true,
         sameSite: "Strict",
       });
       cookies.set("refreshToken", refreshToken, {
         path: "/",
-        httpOnly: true,
         sameSite: "Strict",
       });
-      console.log(accessToken, refreshToken);
     },
     logout: (state) => {
       state.accessToken = null;

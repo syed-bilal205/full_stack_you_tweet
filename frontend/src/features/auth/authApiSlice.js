@@ -9,7 +9,6 @@ export const authApiSlice = api.injectEndpoints({
         for (const key in credentials) {
           formData.append(key, credentials[key]);
         }
-        console.log(formData);
         return {
           url: "/user/register",
           method: "POST",
@@ -27,9 +26,7 @@ export const authApiSlice = api.injectEndpoints({
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
         try {
           const result = await queryFulfilled;
-
           const { accessToken, refreshToken } = result.data.data;
-
           dispatch(
             setCredentials({
               accessToken,
@@ -67,7 +64,6 @@ export const authApiSlice = api.injectEndpoints({
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
         try {
           const result = await queryFulfilled;
-          console.log("Refresh result:", result);
           const { accessToken, refreshToken } = result.data.data;
           console.log(accessToken, refreshToken);
           dispatch(
